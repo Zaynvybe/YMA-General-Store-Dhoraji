@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#147d46">
+<title>Y.M.A General Store | Online Grocery</title>
+<style>
+:root{--green:#147d46;--dark:#103b27;--cream:#f7faf7;--line:#e2e9e3}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--cream);color:#17251c}
+header{background:var(--green);color:#fff;padding:22px 16px}
+.wrap{max-width:1100px;margin:auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-size:clamp(1.4rem,4vw,2rem);margin:0}.tag{margin:6px 0 0;color:#e3f4e8}
+.cart-pill{background:#fff;color:var(--dark);padding:10px 14px;border-radius:999px;font-weight:700}
+main{max-width:1100px;margin:20px auto;padding:0 14px}
+.notice{background:#fff6d9;border:1px solid #f0dfa3;padding:12px 14px;border-radius:12px;margin-bottom:16px;font-size:.92rem}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+input,select,textarea{font:inherit;padding:11px 12px;border:1px solid #ccd8ce;border-radius:10px;background:#fff;width:100%}
+#search{flex:1;min-width:180px}.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:12px}
+.product{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px;display:flex;flex-direction:column;gap:9px;min-height:220px}
+.emoji{font-size:2.3rem;background:#f0f7f1;border-radius:12px;text-align:center;padding:12px}
+.product h3{font-size:1rem;margin:0}.muted{color:#637267;font-size:.85rem}.price{font-weight:800;color:var(--green);margin-top:auto}
+.add{border:0;background:var(--green);color:#fff;border-radius:9px;padding:10px;font-weight:700;cursor:pointer}
+.qtyline{display:flex;align-items:center;justify-content:space-between;gap:8px}.qtyline button{width:32px;height:32px;border:1px solid #cbd8ce;border-radius:8px;background:#fff;font-size:1.1rem}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:22px}
+.panel h2{margin:0 0 12px}.cart-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.cart-row small{display:block;color:#637267}.total{display:flex;justify-content:space-between;font-size:1.15rem;font-weight:800;padding:14px 0}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fields .wide{grid-column:1/-1}
+.whatsapp{width:100%;background:#168447;color:#fff;border:0;border-radius:11px;padding:14px;font-weight:800;font-size:1rem;cursor:pointer}
+footer{text-align:center;padding:24px 14px;color:#647269;font-size:.85rem}
+@media(max-width:520px){.fields{grid-template-columns:1fr}.fields .wide{grid-column:auto}.products{grid-template-columns:repeat(2,minmax(0,1fr))}.product{padding:10px}}
+</style>
+</head>
+<body>
+<header><div class="wrap top"><div><h1>🛒 Y.M.A General Store</h1><p class="tag">Aapki rozmarra ki zarooraton ka saathi</p></div><div class="cart-pill">🧺 Cart: <span id="cartCount">0</span></div></div></header>
+<main>
+<div class="notice"><b>Store owner:</b> Neeche diye gaye sample products aur rates demo ke liye hain. Publish karne se pehle apne asli products aur prices se badal dein.</div>
+<div class="tools"><input id="search" placeholder="Product search karein..." aria-label="Product search"><select id="category" aria-label="Category filter"><option value="">Saari categories</option></select></div>
+<div class="products" id="products"></div>
+<section class="panel" id="cartPanel"><h2>🧺 Aapka Cart</h2><div id="cartItems" class="muted">Abhi cart khaali hai.</div><div class="total"><span>Total</span><span id="total">₹0</span></div>
+<h2>Delivery details</h2><div class="fields">
+<input id="customer" placeholder="Aapka naam *" autocomplete="name">
+<input id="phone" placeholder="Customer mobile number *" type="tel" autocomplete="tel">
+<input class="wide" id="address" placeholder="Delivery address *" autocomplete="street-address">
+<textarea class="wide" id="notes" rows="2" placeholder="Extra note (optional)"></textarea>
+</div><p class="muted">Order WhatsApp par bhejne ke liye WhatsApp app ya WhatsApp Web khulega. Order tab tak send nahi hota jab tak aap wahan Send nahi dabate.</p>
+<button class="whatsapp" onclick="sendOrder()">🟢 WhatsApp par Order Karein</button>
+</section>
+</main>
+<footer>Y.M.A General Store · Online order demo</footer>
+<script>
+const WHATSAPP_NUMBER = "917802831386"; // India country code + store number
+// Demo products and prices — replace with your actual inventory.
+const products = [
+{id:1,name:"Chawal (Rice)",unit:"1 kg",price:60,cat:"Anaj",emoji:"🍚"},
+{id:2,name:"Aata (Wheat Flour)",unit:"1 kg",price:40,cat:"Anaj",emoji:"🌾"},
+{id:3,name:"Toor Dal",unit:"1 kg",price:140,cat:"Dal",emoji:"🫘"},
+{id:4,name:"Moong Dal",unit:"1 kg",price:120,cat:"Dal",emoji:"🫘"},
+{id:5,name:"Chana Dal",unit:"1 kg",price:85,cat:"Dal",emoji:"🫘"},
+{id:6,name:"Sugar (Cheeni)",unit:"1 kg",price:45,cat:"Anaj",emoji:"🍚"},
+{id:7,name:"Salt (Namak)",unit:"1 kg",price:22,cat:"Kitchen",emoji:"🧂"},
+{id:8,name:"Cooking Oil",unit:"1 litre",price:145,cat:"Kitchen",emoji:"🫗"},
+{id:9,name:"Tea (Chai Patti)",unit:"250 g",price:110,cat:"Drinks",emoji:"🍵"},
+{id:10,name:"Milk",unit:"500 ml",price:30,cat:"Dairy",emoji:"🥛"},
+{id:11,name:"Biscuits",unit:"Pack",price:20,cat:"Snacks",emoji:"🍪"},
+{id:12,name:"Noodles",unit:"Pack",price:15,cat:"Snacks",emoji:"🍜"},
+{id:13,name:"Bath Soap",unit:"Piece",price:35,cat:"Personal Care",emoji:"🧼"},
+{id:14,name:"Washing Powder",unit:"500 g",price:45,cat:"Cleaning",emoji:"🫧"},
+{id:15,name:"Toothpaste",unit:"Pack",price:55,cat:"Personal Care",emoji:"🪥"},
+{id:16,name:"Shampoo",unit:"Sachet/Pack",price:2,cat:"Personal Care",emoji:"🧴"},
+{id:17,name:"Turmeric Powder",unit:"100 g",price:30,cat:"Masale",emoji:"🟡"},
+{id:18,name:"Red Chilli Powder",unit:"100 g",price:35,cat:"Masale",emoji:"🌶️"},
+{id:19,name:"Cumin (Jeera)",unit:"100 g",price:40,cat:"Masale",emoji:"🌿"},
+{id:20,name:"Detergent Bar",unit:"Piece",price:20,cat:"Cleaning",emoji:"🧽"}
+];
+const cart = {};
+const money = n => "₹" + n.toLocaleString("en-IN");
+const $ = id => document.getElementById(id);
+function initCategories(){[...new Set(products.map(p=>p.cat))].forEach(c=>{let o=document.createElement("option");o.value=c;o.textContent=c;$("category").appendChild(o)});}
+function renderProducts(){
+ const q=$("search").value.toLowerCase(), cat=$("category").value;
+ const list=products.filter(p=>(p.name.toLowerCase().includes(q)||p.cat.toLowerCase().includes(q))&&(!cat||p.cat===cat));
+ $("products").innerHTML=list.map(p=>`<article class="product"><div class="emoji">${p.emoji}</div><h3>${p.name}</h3><div class="muted">${p.unit}</div><div class="price">${money(p.price)}</div><div id="controls-${p.id}">${cart[p.id]?`<div class="qtyline"><button onclick="changeQty(${p.id},-1)" aria-label="Decrease">−</button><b>${cart[p.id]}</b><button onclick="changeQty(${p.id},1)" aria-label="Increase">+</button></div>`:`<button class="add" onclick="changeQty(${p.id},1)">+ Cart mein daalein</button>`}</div></article>`).join("") || "<p>Koi product nahi mila.</p>";
+}
+function changeQty(id,delta){cart[id]=(cart[id]||0)+delta;if(cart[id]<=0)delete cart[id];renderProducts();renderCart();}
+function renderCart(){
+ const items=products.filter(p=>cart[p.id]);
+ $("cartCount").textContent=items.reduce((s,p)=>s+cart[p.id],0);
+ if(!items.length){$("cartItems").textContent="Abhi cart khaali hai.";}
+ else $("cartItems").innerHTML=items.map(p=>`<div class="cart-row"><div><b>${p.name}</b><small>${money(p.price)} × ${cart[p.id]} (${p.unit})</small></div><b>${money(p.price*cart[p.id])}</b></div>`).join("");
+ $("total").textContent=money(items.reduce((s,p)=>s+p.price*cart[p.id],0));
+}
+function sendOrder(){
+ const items=products.filter(p=>cart[p.id]);
+ if(!items.length){alert("Pehle cart mein kam se kam ek product daalein.");return;}
+ const customer=$("customer").value.trim(), phone=$("phone").value.trim(), address=$("address").value.trim();
+ if(!customer||!phone||!address){alert("Kripya naam, mobile number aur delivery address bharein.");return;}
+ const lines=items.map(p=>`• ${p.name} (${p.unit}) × ${cart[p.id]} = ${money(p.price*cart[p.id])}`);
+ const total=items.reduce((s,p)=>s+p.price*cart[p.id],0);
+ const message=`*New Order - Y.M.A General Store*%0A%0A*Customer:* ${encodeURIComponent(customer)}%0A*Mobile:* ${encodeURIComponent(phone)}%0A*Address:* ${encodeURIComponent(address)}%0A%0A*Items:*%0A${encodeURIComponent(lines.join("\n"))}%0A%0A*Total: ${money(total)}*%0A*Note:* ${encodeURIComponent($("notes").value.trim()||"None")}`;
+ window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`,"_blank");
+}
+$("search").addEventListener("input",renderProducts);$("category").addEventListener("change",renderProducts);
+initCategories();renderProducts();renderCart();
+</script>
+</body></html>
